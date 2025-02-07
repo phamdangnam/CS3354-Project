@@ -2,56 +2,64 @@ import { Link } from "react-router-dom";
 import "../Styling/Content.css";
 import { contentDetailsRoute } from "../Data/routes.js";
 import { useEffect, useState } from "react";
-import fetchDummyData from "../Data/fetchDummyData.js";
 import PieChart from "./PieChart.jsx";
 import axios from "axios";
 import { AppContext } from "../Data/AppProvider";
 import { useContext } from "react";
 
 const Content = () => {
-  const { accessories } = fetchDummyData();
-  const [img, setImg] = useState("");
-  const { categories, amount, setCategories, setAmount } =
-    useContext(AppContext);
+  const [imgs, setImgs] = useState([]);
+  const { categories, amount } = useContext(AppContext);
 
   useEffect(() => {
-    const getImages = async () => {
+    const getImg = async (keyword) => {
       try {
-        if (img) return;
         const { data } = await axios.get(
-          "https://api.unsplash.com/search/photos?query=books&page=1&per_page=1&client_id=49D1vP6L1n7jL05-rpMXMONwlT_zL-bABOG84zdE_1g"
+          `https://api.unsplash.com/search/photos?query={${keyword}}&page=1&per_page=1&client_id=49D1vP6L1n7jL05-rpMXMONwlT_zL-bABOG84zdE_1g`
         );
         const { results } = data;
         const firstSearch = results[0];
-        setImg(firstSearch.urls.full);
+        return firstSearch.urls.full;
       } catch (error) {
         console.log(error);
+        return null;
       }
     };
 
-    getImages();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const fetchImages = async () => {
+      const imagePromises = categories.map(async (e) => {
+        const imgUrl = await getImg(e.category);
+        return imgUrl;
+      });
+      const images = await Promise.all(imagePromises);
+      setImgs(images);
+    };
+
+    fetchImages();
+  }, [categories]);
+
   return (
     <div id="mainContainer">
       <div id="containerClothing">
         <div id="chart">
-          <PieChart></PieChart>
-          <h1>You are doing awesome!!</h1>
+          <PieChart />
+          <h1>{"Your total is $" + amount}</h1>
         </div>
         <div id="containerAccessories">
-          {categories.map((e) => (
-            <>
-              <div id="box">
-                <Link to={contentDetailsRoute + e.id}>
-                  <img src={img}></img>
-                  <div id="details">
-                    <h3>{e.category}</h3>
-                    <h4>{e.percentage + "%"}</h4>
-                  </div>
-                </Link>
-              </div>
-            </>
+          {categories.map((e, index) => (
+            <div id="box" key={index}>
+              <Link to={contentDetailsRoute + e.id}>
+                {imgs[index] ? (
+                  <img id="categoryImg" src={imgs[index]} />
+                ) : (
+                  <p>Loading...</p>
+                )}
+                <div id="details">
+                  <h3>{e.category}</h3>
+                  <h4>{e.percentage + "%"}</h4>
+                </div>
+              </Link>
+            </div>
           ))}
         </div>
       </div>

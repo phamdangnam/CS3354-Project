@@ -1,6 +1,6 @@
 import "../Styling/Header.css";
 import { homeRoute } from "../Data/routes";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { BiEditAlt } from "react-icons/bi";
 import { RiMenuAddFill } from "react-icons/ri";
@@ -8,9 +8,26 @@ import { MdDelete } from "react-icons/md";
 import { AppContext } from "../Data/AppProvider";
 const Header = () => {
   const [showForm, setShowForm] = useState(false);
+  const [saveDisabled, setSaveDisabled] = useState(true);
 
   const { categories, amount, setCategories, setAmount } =
     useContext(AppContext);
+
+  useEffect(() => {
+    const validForm = () => {
+      for (let category of categories) {
+        if (
+          category.category.trim() === "" ||
+          category.percentage.trim() === ""
+        )
+          return false;
+      }
+      return true;
+    };
+    const formIsValid = validForm();
+    console.log(formIsValid);
+    setSaveDisabled(!formIsValid);
+  }, [categories]);
 
   const addCategory = () => {
     let updatedCategories = [...categories];
@@ -111,16 +128,17 @@ const Header = () => {
               </div>
 
               <div style={{ display: "flex", gap: "10px" }}>
-                <button id="formButton" type="submit">
+                <button
+                  id={saveDisabled ? "formButton" : "cancelButton"}
+                  type="submit"
+                  disabled={saveDisabled}
+                >
                   Save
                 </button>
                 <button
-                  id="formButton"
+                  id="cancelButton"
                   type="button"
                   onClick={() => setShowForm(false)}
-                  style={{
-                    backgroundColor: "#6B7280",
-                  }}
                 >
                   Cancel
                 </button>

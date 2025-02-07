@@ -1,14 +1,15 @@
 import { Chart } from "react-google-charts";
+import { AppContext } from "../Data/AppProvider";
+import { useContext } from "react";
 
 const PieChart = () => {
-  const data = [
-    ["Task", "Hours per Day"],
-    ["Work", 11],
-    ["Eat", 2],
-    ["Commute", 2],
-    ["Watch TV", 2],
-    ["Sleep", 7],
-  ];
+  const { categories } = useContext(AppContext);
+  const categoryData = categories.map((e) => [
+    e.category,
+    Number(e.percentage),
+  ]);
+
+  const data = [["Category", "Percentage"], ...categoryData];
 
   const options = {
     is3D: true, // Enables 3D view
